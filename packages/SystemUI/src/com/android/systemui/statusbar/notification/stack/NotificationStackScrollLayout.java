@@ -223,6 +223,19 @@ public class NotificationStackScrollLayout
     private float mInitialTouchX;
     private float mInitialTouchY;
 
+    // notification boost
+    private long mLastBoostTime = 0;
+
+    private void doScrollBoost() {
+    long now = SystemClock.uptimeMillis();
+    if (now - mLastBoostTime > 100) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, 150);
+        }
+        mLastBoostTime = now;
+    }
+}
 
     // Record the pointerId for the MotionEvents that's outside of drawBounds
     private int mOutBoundsEventId = -1;
@@ -3113,10 +3126,12 @@ public class NotificationStackScrollLayout
                     mExpandedInThisMotion && getOwnScrollY() >= 0 ? 0 : Integer.MAX_VALUE / 2);
 
             animateScroll();
-            boostInteraction(700);
-        }
-    }
-
+            PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+            if (pmi != null) {
+                pmi.setPowerBoost(Boost.INTERACTION, 300);
+            }
+       }
+ }
     /**
      * @return Whether a fling performed on the top overscroll edge lead to the expanded
      * overScroll view (i.e QS).
@@ -4093,6 +4108,16 @@ public class NotificationStackScrollLayout
             if (shouldRefuseTouchEvent(ev)) {
                 return false;
             }
+        }
+
+        switch (ev.getActionMasked()) {
+        case MotionEvent.ACTION_DOWN:
+            doScrollBoost();
+            break;
+
+        case MotionEvent.ACTION_MOVE:
+            doScrollBoost();
+            break;
         }
 
         if (mTouchHandler != null) {

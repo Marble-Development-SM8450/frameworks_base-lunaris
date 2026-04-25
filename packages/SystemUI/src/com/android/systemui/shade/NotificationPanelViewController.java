@@ -2183,6 +2183,12 @@ public final class NotificationPanelViewController implements
     }
 
     private void onTrackingStarted() {
+        PowerManagerInternal pmi =
+        LocalServices.getService(PowerManagerInternal.class);
+
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, 200);
+        }
         endClosing();
         mShadeRepository.setLegacyShadeTracking(true);
         if (mTrackingStartedListener != null) {
@@ -4316,6 +4322,14 @@ public final class NotificationPanelViewController implements
             final float y = event.getY(pointerIndex);
 
             boolean isDown = event.getActionMasked() == MotionEvent.ACTION_DOWN;
+            if (isDown) {
+                PowerManagerInternal pmi =
+                LocalServices.getService(PowerManagerInternal.class);
+
+            if (pmi != null) {
+                pmi.setPowerBoost(Boost.INTERACTION, 200);
+            }
+            }
             if (isDown
                     || event.getActionMasked() == MotionEvent.ACTION_MOVE) {
                 mGestureWaitForTouchSlop = shouldGestureWaitForTouchSlop();
